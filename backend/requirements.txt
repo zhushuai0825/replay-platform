@@ -7,3 +7,5 @@ python-dotenv==1.0.1
 pydantic-settings==2.2.1
 celery==5.4.0
 redis==5.0.4
+loguru==0.7.2
+prometheus-fastapi-instrumentator==6.1.0
