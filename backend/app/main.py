@@ -8,14 +8,26 @@ Describe:
 
 """
 
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from config.settings import settings
-from databases import Base, engine
+from .config.settings import settings
+from .databases import Base, engine
 
+# 配置日志
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
+# 尝试创建数据库表，如果失败则记录警告但不阻止应用启动
 if settings.APP_DEBUG:
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database tables created successfully")
+    except Exception as e:
+        logger.warning(f"Failed to create database tables: {e}. The application will continue to run.")
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -40,7 +52,7 @@ async def root():
 async def health():
     return {"status": "healthy"}
 
-from app.api.v1 import tasks, traffic, environments
+from .api import tasks, traffic, environments
 app.include_router(tasks.router, prefix=f"{settings.API_V1_PREFIX}/tasks", tags=["tasks"])
 app.include_router(traffic.router, prefix=f"{settings.API_V1_PREFIX}/traffic", tags=["traffic"])
 app.include_router(environments.router, prefix=f"{settings.API_V1_PREFIX}/environments", tags=["environments"])
